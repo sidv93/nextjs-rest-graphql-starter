@@ -1,0 +1,26 @@
+version: "2.1"
+
+services:
+  starter-db:
+    restart: on-failure
+    build:
+      context: ./db
+    env_file: .env
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+      - MONGO_USER_NAME=${MONGO_USER_NAME}
+      - MONGO_USER_PASSWORD=${MONGO_USER_PASSWORD}
+    volumes:
+      - starter-data:/data/db
+    networks:
+      - traefik_global
+networks:
+  traefik_global:
+    external: true
+
+volumes:
+  starter-data:
