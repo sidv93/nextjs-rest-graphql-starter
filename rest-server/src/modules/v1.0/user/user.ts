@@ -10,6 +10,7 @@ import { getRepository, ObjectID } from 'typeorm';
 const GENERAL_ERROR_REGISTER = 'Unexpected error when registering user';
 const GENERAL_ERROR_UPDATE = 'Unexpected error when updating user';
 const GENERIC_ERROR_MESSAGE_FETCH = 'Unexpected error when fetching users';
+const GENERAL_ERROR_DELETE = 'Unexpected error when removing user';
 
 export const registerUser = async (req: IRequest<User>, res: Response, next: NextFunction): Promise<void> => {
     let error, user;
@@ -35,7 +36,7 @@ export const registerUser = async (req: IRequest<User>, res: Response, next: Nex
     };
     const newUser = userRepository.create(userObj);
 
-    
+
     [error, user] = await to(userRepository.save(newUser));
     if (error) {
         logErrorObject(error, 'Error when saving user');
@@ -98,6 +99,39 @@ export const updateUser = async (req: IRequest<User>, res: Response, next: NextF
     const response = JSON.parse(JSON.stringify(user));
 
     return next(new ApiSuccess(`User of name ${user.firstName} updated`, response));
+}
+
+export const deleteUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    let error, user: User;
+
+    const { id } = req.params;
+
+    if (!id) {
+        logger.warn('No id in request');
+        return next(new BadRequest('No user id in request'));
+    }
+
+    const userRepository = getRepository(User);
+
+    [error, user] = await to<User>(userRepository.findOne(id));
+    if (error) {
+        logErrorObject(error, 'Error when fetching user');
+        return next(new GeneralError(GENERAL_ERROR_DELETE));
+    }
+    if (!user) {
+        logger.warn(`User of id ${id} does not exist`);
+        return next(new BadRequest(`User of id ${id} does not exist`));
+    }
+
+    [error] = await to(userRepository.remove(user));
+    if (error) {
+        logErrorObject(error, 'Error when deleting user');
+        return next(new GeneralError(GENERAL_ERROR_DELETE));
+    }
+
+    logger.info(`User of id ${id} removed`);
+
+    return next(new ApiSuccess(`User of id ${id} removed`, {}));
 }
 
 export const fetchUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
