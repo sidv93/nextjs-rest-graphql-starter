@@ -1,8 +1,11 @@
 import { number, object, ObjectSchema, string } from 'yup';
+import { User } from '../entity';
 import { IUser } from '../models';
 
-export const UserSchema: ObjectSchema<Omit<IUser, 'id'>> = object({
-    name: string().required('Name is required'),
+export const UserSchema: ObjectSchema<Omit<User, 'id'>> = object({
+    firstName: string().required('First name is required'),
+    lastName: string().required('Last name is required'),
+    age: number().typeError('Age must be a number').required('Age is required'),
     email: string().email().typeError('Invalid email').required('Email is required')
 }).defined();
 
@@ -26,7 +29,9 @@ export const UserQuerySchema: ObjectSchema<IUserQuery> = object({
     orderBy: number().oneOf([1, -1], 'Not a valid').default(-1).notRequired()
 }).defined();
 
-export const UserEditSchema: ObjectSchema<Partial<IUser>> = object({
-    name: string().notRequired(),
-    email: string().email().typeError('Invalid email').notRequired()
+export const UserEditSchema: ObjectSchema<Partial<User>> = object({
+    firstName: string().notRequired(),
+    email: string().email().typeError('Invalid email').notRequired(),
+    age: number().typeError('Age must be a number').notRequired(),
+    lastName: string().notRequired()
 }).defined();

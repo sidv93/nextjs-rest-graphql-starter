@@ -1,4 +1,4 @@
-import { createLogger, format } from 'winston';
+import { createLogger, format, transports } from 'winston';
 import DailyRotateFile = require('winston-daily-rotate-file');
 const { combine, timestamp, label, printf } = format;
 
@@ -14,6 +14,7 @@ export const logger = createLogger({
         myFormat,
         format.json()),
     transports: [
+        new transports.Console(),
         new DailyRotateFile({
             frequency: '24h',
             filename: 'api-%DATE%.log',

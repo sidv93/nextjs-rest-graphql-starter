@@ -7,6 +7,6 @@ const router = express.Router();
 router.use('/api/docs', swaggerUi.serve);
 router.get('/api/docs', swaggerUi.setup(swaggerDocument));
 
-router.use('/api/', routes);
+router.use('/', routes);
 
 export default router;

@@ -1,22 +1,16 @@
-import mongoose, { ConnectionOptions, Mongoose } from 'mongoose';
+import { Connection, createConnection } from 'typeorm';
+import { User } from '../entity/User';
 
-const MONGO_URL = process.env.MONGO_SERVER_ADDRESS || 'mongo';
-const connectionString = `mongodb://${MONGO_URL}/${process.env.MONGO_INITDB_DATABASE}`;
+let mongodbConnection: Connection;
 
-const mongooseOptions: ConnectionOptions = {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useUnifiedTopology: true,
-    user: process.env.MONGO_USER_NAME,
-    pass: process.env.MONGO_USER_PASSWORD
-};
-
-const connect = (): Promise<Mongoose> => {
-    return mongoose.connect(connectionString, mongooseOptions);
-};
+const connect = async (): Promise<void> => {
+    mongodbConnection =  await createConnection();
+    const users = await mongodbConnection.manager.find(User);
+    console.log('Loaded users: ', users);
+}
 
 const disconnect = (): Promise<void> => {
-    return mongoose.connection.close();
+    return mongodbConnection.close();
 };
 
-export default { connect, disconnect };
+export default { connect, disconnect }

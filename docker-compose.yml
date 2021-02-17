@@ -27,9 +27,9 @@ services:
         - API_PORT=${API_PORT}
     env_file: .env
     labels:
-      - "traefik.http.routers.project-api.rule=PathPrefix(`${API_BASE_HREF}`)"
-      - "traefik.http.routers.project-api.middlewares=project-api-stripprefix"
-      - "traefik.http.middlewares.project-api-stripprefix.stripprefix.prefixes=${API_BASE_HREF}"
+      - "traefik.http.routers.rest-api.rule=PathPrefix(`${API_BASE_HREF}`)"
+      - "traefik.http.routers.rest-api.middlewares=rest-api-stripprefix"
+      - "traefik.http.middlewares.rest-api-stripprefix.stripprefix.prefixes=${API_BASE_HREF}"
       - "traefik.enable=true"
     volumes:
       - logs:${API_LOGS_PATH}
