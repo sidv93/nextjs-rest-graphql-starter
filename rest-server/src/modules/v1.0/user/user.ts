@@ -1,11 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-// import { IUser, User, UserDoc } from '../../../models';
 import { IRequest, Pipeline } from '../../../types';
 import to from 'await-to-js';
-import { ApiSuccess, BadRequest, GeneralError, logErrorObject, logger } from '../../../utils';
+import { ApiSuccess, BadRequest, GeneralError, logErrorObject, logger, NotFound } from '../../../utils';
 import { IUserQuery } from '../../../validators';
 import { User } from '../../../entity';
-import { getRepository, ObjectID } from 'typeorm';
+import { getRepository, getMongoRepository } from 'typeorm';
 
 const GENERAL_ERROR_REGISTER = 'Unexpected error when registering user';
 const GENERAL_ERROR_UPDATE = 'Unexpected error when updating user';
@@ -134,46 +133,71 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
     return next(new ApiSuccess(`User of id ${id} removed`, {}));
 }
 
+export const fetchUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { id } = req.params;
+
+    if (!id) {
+        logger.warn('No id in request');
+        return next(new BadRequest('No user id in request'));
+    }
+
+    const userRepository = getMongoRepository(User);
+    const [error, user] = await to<User>(userRepository.findOne(id));
+    if (error) {
+        logErrorObject(error, 'Error in fetching users');
+        return next(new GeneralError(GENERIC_ERROR_MESSAGE_FETCH));
+    }
+
+    if (!user) {
+        logger.warn(`User of id ${id} does not exist`);
+        return next(new NotFound(`User of id ${id} does not exist`));
+    }
+
+    logger.info('Found user');
+    return next(new ApiSuccess('Found user', user));
+}
+
 export const fetchUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    // const query = req.query as IUserQuery;
-    // const pipeline = buildPipeline(query);
-    // const [error, users] = await to<Array<UserDoc>>(User.aggregate(pipeline).exec());
-    // if (error) {
-    //     logErrorObject(error, 'Error in fetching users');
-    //     return next(new GeneralError(GENERIC_ERROR_MESSAGE_FETCH));
-    // }
-    // if (users) {
-    //     logger.info(`Found ${users.length} users`);
-    //     return next(new ApiSuccess(`Found ${users.length} users`, users));
-    // }
+    const query = req.query as IUserQuery;
+    const pipeline = buildPipeline(query);
+    const userRepository = getMongoRepository(User);
+    const [error, users] = await to<Array<User>>(userRepository.aggregate(pipeline).toArray());
+    if (error) {
+        logErrorObject(error, 'Error in fetching users');
+        return next(new GeneralError(GENERIC_ERROR_MESSAGE_FETCH));
+    }
+    if (users) {
+        logger.info(`Found ${users.length} users`);
+        return next(new ApiSuccess(`Found ${users.length} users`, users));
+    }
 }
 
 const buildPipeline = (queryParams: IUserQuery): Array<Pipeline> => {
     const pipeline: Array<Pipeline> = [];
-    // const limit = queryParams.limit;
-    // const skip = queryParams.skip;
-    // const sort = {
-    //     [queryParams.sortBy as string]: queryParams.orderBy
-    // };
+    const limit = queryParams.limit;
+    const skip = queryParams.skip;
+    const sort = {
+        [queryParams.sortBy as string]: queryParams.orderBy
+    };
 
-    // const match = {};
-    // Object.assign(
-    //     match,
-    //     queryParams.name && { name: { $regex: `${String(queryParams.name)}`, $options: 'i' } },
-    //     queryParams.id && { id: String(queryParams.id) },
-    //     queryParams.email && { email: { $regex: `${String(queryParams.email)}`, $options: 'i' } }
-    // );
+    const match = {};
+    Object.assign(
+        match,
+        queryParams.firstName && { firstName: { $regex: `${String(queryParams.firstName)}`, $options: 'i' } },
+        queryParams.lastName && { lastName: { $regex: `${String(queryParams.lastName)}`, $options: 'i' } },
+        queryParams.email && { email: { $regex: `${String(queryParams.email)}`, $options: 'i' } }
+    );
 
-    // const projection = {
-    //     _id: 0,
-    //     __v: 0
-    // };
+    const projection = {
+        _id: 0,
+        __v: 0
+    };
 
-    // pipeline.push({ $match: match });
-    // pipeline.push({ $sort: sort });
-    // pipeline.push({ $skip: skip });
-    // pipeline.push({ $limit: limit });
-    // pipeline.push({ $project: projection });
+    pipeline.push({ $match: match });
+    pipeline.push({ $sort: sort });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limit });
+    pipeline.push({ $project: projection });
 
     return pipeline;
 };
