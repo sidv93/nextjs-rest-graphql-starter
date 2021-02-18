@@ -1,0 +1,45 @@
+{
+   "name": "graphql",
+   "version": "1.0.0",
+   "description": "Graphql server",
+   "main": "index.js",
+   "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "lint": "./node_modules/.bin/eslint src/ --ext .js,.ts",
+      "start": "ts-node src/index.ts",
+      "build": "tsc"
+   },
+   "repository": {
+      "type": "git",
+      "url": "git+https://github.com/sidv93/express-starter.git"
+   },
+   "author": "Siddharth Venkatesh",
+   "license": "ISC",
+   "bugs": {
+      "url": "https://github.com/sidv93/express-starter/issues"
+   },
+   "homepage": "https://github.com/sidv93/express-starter#readme",
+   "devDependencies": {
+      "@types/dotenv": "^8.2.0",
+      "@types/node": "^8.0.29",
+      "@types/winston": "^2.4.4",
+      "@typescript-eslint/eslint-plugin": "^4.15.1",
+      "@typescript-eslint/parser": "^4.15.1",
+      "eslint": "^7.20.0",
+      "eslint-config-standard": "^16.0.2",
+      "eslint-plugin-import": "^2.22.1",
+      "eslint-plugin-node": "^11.1.0",
+      "eslint-plugin-promise": "^4.3.1",
+      "ts-node": "3.3.0",
+      "typescript": "3.3.3333"
+   },
+   "dependencies": {
+      "dotenv": "^8.2.0",
+      "mongodb": "^3.6.4",
+      "mysql": "^2.14.1",
+      "reflect-metadata": "^0.1.10",
+      "typeorm": "0.2.31",
+      "winston": "^3.3.3",
+      "winston-daily-rotate-file": "^4.5.0"
+   }
+}
