@@ -1,7 +1,8 @@
-import { UserInputError, ValidationError } from 'apollo-server-express';
+import { ValidationError } from 'apollo-server-express';
 import to from 'await-to-js';
 import { Resolver, Query, Arg, Mutation, InputType, Field } from 'type-graphql';
-import { getRepository, Repository } from 'typeorm';
+import { getMongoRepository, MongoRepository } from 'typeorm';
+import { ObjectID } from 'mongodb';
 
 import { User } from '../entities';
 import { logErrorObject, logger } from '../utils';
@@ -38,14 +39,14 @@ export class UserInputPartial implements Omit<User, 'id'> {
 
 @Resolver(of => User)
 export default class UserResolver {
-    private userRepository: Repository<User>;
+    private userRepository: MongoRepository<User>;
     constructor() {
-        this.userRepository = getRepository(User);
+        this.userRepository = getMongoRepository(User);
     }
 
     @Query(returns => User, { nullable: true })
     async user(@Arg('id', type => String) id: string): Promise<User> {
-        const [error, user] = await to<User>(this.userRepository.findOne(id));
+        const [error, user] = await to<User>(this.userRepository.findOne(new ObjectID(id)));
         if (error) {
             logErrorObject(error, 'Error in fetching user');
             throw new Error('Error in finding user');
@@ -91,7 +92,7 @@ export default class UserResolver {
     async updateUser(@Arg('id', type => String) id: string, @Arg('user') userInput: UserInputPartial): Promise<User> {
         let error, user, userCheck;
         const { email, firstName, lastName, age } = userInput;
-        [error, user] = await to<User>(this.userRepository.findOne(id));
+        [error, user] = await to<User>(this.userRepository.findOne(new ObjectID(id)));
         if (error) {
             logErrorObject(error, 'Error in fetching user');
             throw new Error('Error in updating user');
@@ -129,7 +130,7 @@ export default class UserResolver {
     @Mutation(returns => String)
     async deleteUser(@Arg('id', type => String) userId: string): Promise<string> {
         let error, user;
-        [error, user] = await to<User>(this.userRepository.findOne(userId));
+        [error, user] = await to<User>(this.userRepository.findOne(new ObjectID(userId)));
         if (error) {
             logErrorObject(error, 'Error when fetching user');
             throw new Error('Error in deleting user');
