@@ -41,6 +41,26 @@ services:
     networks:
       - traefik_global
 
+  graphql:
+    restart: on-failure
+    build:
+      context: ./graphql
+      args:
+        - API_PORT=${API_PORT}
+    env_file: .env
+    labels:
+      - "traefik.http.routers.graphql.rule=PathPrefix(`${API_GRAPHQL_PATH}`)"
+      - "traefik.enable=true"
+    volumes:
+      - logs:${API_LOGS_PATH}
+    healthcheck:
+      test: "exit 0"
+      timeout: ${API_HEALTHCHECK_TIMEOUT}
+    depends_on:
+      - starter-db
+    networks:
+      - traefik_global
+
 networks:
   traefik_global:
     external: true

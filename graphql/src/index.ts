@@ -1,12 +1,40 @@
 // eslint-disable-file import/first
 
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 dotenv.config();
-// import app from './app';
+import * as express from 'express';
+import { buildSchema } from 'type-graphql';
 import { logger } from './utils';
 import 'reflect-metadata';
+import { db } from './config';
+import { UserResolver } from './resolvers';
+import { ApolloServer } from 'apollo-server-express';
 
-// app.listen(app.get('port'), (): void => {
-//     console.log(`API server running at port ${app.get('port')}`);
-//     logger.info(`API server running at port ${app.get('port')}`);
-// });
+
+const bootstrap = async () => {
+    db.connect().catch((err: any) => {
+        console.log('Mongo connection Error', err);
+        process.exit(0);
+    });
+
+    process.on('SIGINT', async () => {
+        console.log('Gracefully shutting down');
+        await db.disconnect();
+        process.exit(0);
+    });
+
+    const schema = await buildSchema({
+        resolvers: [UserResolver]
+    });
+
+    const server = new ApolloServer({ schema });
+    server.graphqlPath = '/graphql';
+    const app = express();
+    server.applyMiddleware({ app });
+
+    app.listen({ port: process.env.API_PORT }, () =>
+        logger.info(`🚀 Server ready at http://localhost${server.graphqlPath}`)
+    );
+}
+
+bootstrap();
