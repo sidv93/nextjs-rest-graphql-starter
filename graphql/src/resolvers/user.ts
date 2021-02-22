@@ -6,6 +6,17 @@ import { ObjectID } from 'mongodb';
 
 import { User } from '../entities';
 import { logErrorObject, logger } from '../utils';
+import { Pipeline } from '../utils/types';
+
+export interface UserQuery {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    skip?: number;
+    limit?: number;
+    sortBy?: 'firstName' | 'email' | 'createdAt' | 'updatedAt';
+    orderBy?: 1 | -1;
+}
 
 @InputType()
 export class UserInput implements Omit<User, 'id'> {
@@ -37,6 +48,30 @@ export class UserInputPartial implements Omit<User, 'id'> {
     age: number;
 }
 
+@InputType()
+export class UserQueryInput implements UserQuery {
+    @Field({ nullable: true })
+    firstName: string;
+
+    @Field({ nullable: true })
+    lastName: string;
+
+    @Field({ nullable: true })
+    email: string;
+
+    @Field({ nullable: true, defaultValue: 0 })
+    skip: number;
+
+    @Field({ nullable: true, defaultValue: 5 })
+    limit: number;
+
+    @Field({ nullable: true, defaultValue: -1, })
+    orderBy: 1 | -1;
+
+    @Field({ nullable: true, defaultValue: 'updatedAt' })
+    sortBy: 'firstName' | 'email' | 'createdAt' | 'updatedAt';
+}
+
 @Resolver(of => User)
 export default class UserResolver {
     private userRepository: MongoRepository<User>;
@@ -59,8 +94,17 @@ export default class UserResolver {
     }
 
     @Query(returns => [User])
-    users(): Promise<User[]> {
-        return this.userRepository.find();
+    async users(@Arg('userQuery') userQuery: UserQueryInput): Promise<User[]> {
+        const pipeline = this.buildPipeline(userQuery);
+        const [error, users] = await to<Array<User>>(this.userRepository.aggregate(pipeline).toArray());
+        if (error) {
+            logErrorObject(error, 'Error in fetching users');
+            throw new Error('Error in fetching users');
+        }
+        if (users) {
+            logger.info(`Found ${users.length} users`);
+            return users;
+        }
     }
 
     @Mutation(returns => User)
@@ -147,7 +191,37 @@ export default class UserResolver {
         }
 
         logger.info(`User of id ${userId} removed`);
-        
+
         return userId;
+    }
+
+    private buildPipeline = (query: UserQuery): Array<Pipeline> => {
+        const pipeline: Array<Pipeline> = [];
+        const limit = query.limit;
+        const skip = query.skip;
+        const sort = {
+            [query.sortBy as string]: query.orderBy
+        };
+
+        const match = {};
+        Object.assign(
+            match,
+            query.firstName && { firstName: { $regex: `${String(query.firstName)}`, $options: 'i' } },
+            query.lastName && { lastName: { $regex: `${String(query.lastName)}`, $options: 'i' } },
+            query.email && { email: { $regex: `${String(query.email)}`, $options: 'i' } }
+        );
+
+        const projection = {
+            _id: 0,
+            __v: 0
+        };
+
+        pipeline.push({ $match: match });
+        pipeline.push({ $sort: sort });
+        pipeline.push({ $skip: skip });
+        pipeline.push({ $limit: limit });
+        pipeline.push({ $project: projection });
+
+        return pipeline;
     }
 }
