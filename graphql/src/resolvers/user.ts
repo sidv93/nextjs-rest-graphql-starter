@@ -1,4 +1,5 @@
 import { ValidationError } from 'apollo-server-express';
+import { MaxLength, IsEmail } from 'class-validator';
 import to from 'await-to-js';
 import { Resolver, Query, Arg, Mutation, InputType, Field } from 'type-graphql';
 import { getMongoRepository, MongoRepository } from 'typeorm';
@@ -18,15 +19,20 @@ export interface UserQuery {
     orderBy?: 1 | -1;
 }
 
+type UserEditable = Omit<User, 'id' | 'createdAt' | 'updatedAt'>;
+
 @InputType()
-export class UserInput implements Omit<User, 'id'> {
+export class UserInput implements UserEditable {
     @Field()
+    
     firstName: string;
 
     @Field()
+    @MaxLength(24)
     lastName: string;
 
     @Field()
+    @IsEmail()
     email: string;
 
     @Field()
@@ -34,7 +40,7 @@ export class UserInput implements Omit<User, 'id'> {
 }
 
 @InputType()
-export class UserInputPartial implements Omit<User, 'id'> {
+export class UserInputPartial implements UserEditable {
     @Field({ nullable: true })
     firstName: string;
 

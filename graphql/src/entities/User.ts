@@ -1,5 +1,5 @@
-import { Entity, ObjectIdColumn, ObjectID, Column } from 'typeorm';
-import { ObjectType, Field, ID} from 'type-graphql';
+import { Entity, ObjectIdColumn, ObjectID, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { ObjectType, Field, ID } from 'type-graphql';
 
 @ObjectType()
 @Entity()
@@ -24,4 +24,18 @@ export default class User {
     @Field()
     @Column()
     email: string;
+
+    @Field()
+    @CreateDateColumn({
+        nullable: false,
+        name: 'createdAt'
+    })
+    createdAt: Date;
+
+    @Field()
+    @UpdateDateColumn({
+        nullable: false,
+        name: 'updatedAt'
+    })
+    updatedAt: Date;
 }
