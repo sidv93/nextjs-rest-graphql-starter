@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import styled from 'styled-components';
+import { useGetUsersQuery } from '../generated/graphql';
 
 const Container = styled.div`
     min-height: 100vh;
@@ -46,14 +47,19 @@ const Code = styled.code`
 `;
 
 export default function Home() {
+    const [result, reexecuteQuery] = useGetUsersQuery();
+    const { data, fetching, error } = result;
+    if (fetching) return <p>Loading...</p>
+    if (error) return <p>{error.message}</p>
     return (
         <Container>
+            <p>{data.users[0].email}</p>
             <Head>
                 <title>Next Sample App</title>
-                <link rel="icon" href="/favicon.ico" />
+                <link rel='icon' href='/favicon.ico' />
             </Head>
             <Main>
-                <Title>Welcome to <a href="https://nextjs.org">Next.js!</a></Title>
+                <Title>Welcome to <a href='https://nextjs.org'>Next.js!</a></Title>
                 <Description>
                     Get started by editing{' '}
                     <Code>pages/index.tsx</Code>
