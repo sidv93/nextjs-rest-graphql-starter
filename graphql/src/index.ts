@@ -7,7 +7,7 @@ import { buildSchema } from 'type-graphql';
 import { logger } from './utils';
 import 'reflect-metadata';
 import { db } from './config';
-import { UserResolver } from './resolvers';
+import { BookResolver, UserResolver } from './resolvers';
 import { ApolloServer } from 'apollo-server-express';
 
 
@@ -24,7 +24,7 @@ const bootstrap = async () => {
     });
 
     const schema = await buildSchema({
-        resolvers: [UserResolver]
+        resolvers: [UserResolver, BookResolver]
     });
 
     const server = new ApolloServer({ schema });

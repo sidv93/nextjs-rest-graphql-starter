@@ -1,7 +1,7 @@
 {
     "name": "default",
     "type": "mongodb",
-    "host": "mongo",
+    "host": "starter-db",
     "port": 27017,
     "username": "username",
     "password": "password",

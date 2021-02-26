@@ -2,12 +2,13 @@ import { ValidationError } from 'apollo-server-express';
 import to from 'await-to-js';
 import { Resolver, Query, Arg, Mutation } from 'type-graphql';
 import { getMongoRepository, MongoRepository } from 'typeorm';
+import { v4 as uuid } from 'uuid';
 import { ObjectID } from 'mongodb';
 
 import { User } from '../../entities';
 import { logErrorObject, logger } from '../../utils';
 import { Pipeline } from '../../utils/types';
-import { UserQueryInput, UserQuery, UserInputPartial, UserInput} from './inputs';
+import { UserQueryInput, UserQuery, UserInputPartial, UserInput } from './inputs';
 
 @Resolver(of => User)
 export default class UserResolver {
@@ -18,7 +19,7 @@ export default class UserResolver {
 
     @Query(returns => User, { nullable: true })
     async user(@Arg('id', type => String) id: string): Promise<User> {
-        const [error, user] = await to<User>(this.userRepository.findOne(new ObjectID(id)));
+        const [error, user] = await to<User>(this.userRepository.findOne({ uuid: id }));
         if (error) {
             logErrorObject(error, 'Error in fetching user');
             throw new Error('Error in finding user');
@@ -59,13 +60,14 @@ export default class UserResolver {
             logger.warn(`User of email ${email} already exists`);
             throw new ValidationError(`User of email ${email} already exists`);
         }
-        const newUser = this.userRepository.create(userInput);
+        const newUser = this.userRepository.create({ uuid: uuid(), ...userInput });
         [error, user] = await to<User>(this.userRepository.save(newUser));
         if (error) {
             logErrorObject(error, 'Error in saving user');
             throw new Error('Error in adding user');
         }
         logger.info(`User of name ${firstName} added`);
+        console.log('new user', user);
         return user;
     }
 
@@ -73,7 +75,7 @@ export default class UserResolver {
     async updateUser(@Arg('id', type => String) id: string, @Arg('user') userInput: UserInputPartial): Promise<User> {
         let error, user, userCheck;
         const { email, firstName, lastName, age } = userInput;
-        [error, user] = await to<User>(this.userRepository.findOne(new ObjectID(id)));
+        [error, user] = await to<User>(this.userRepository.findOne({ uuid: id }));
         if (error) {
             logErrorObject(error, 'Error in fetching user');
             throw new Error('Error in updating user');
@@ -109,16 +111,16 @@ export default class UserResolver {
     }
 
     @Mutation(returns => String)
-    async deleteUser(@Arg('id', type => String) userId: string): Promise<string> {
+    async deleteUser(@Arg('id', type => String) id: string): Promise<string> {
         let error, user;
-        [error, user] = await to<User>(this.userRepository.findOne(new ObjectID(userId)));
+        [error, user] = await to<User>(this.userRepository.findOne({ uuid: id }));
         if (error) {
             logErrorObject(error, 'Error when fetching user');
             throw new Error('Error in deleting user');
         }
         if (!user) {
-            logger.warn(`User of id ${userId} does not exist`);
-            throw new ValidationError(`User of id ${userId} does not exist`);
+            logger.warn(`User of id ${id} does not exist`);
+            throw new ValidationError(`User of id ${id} does not exist`);
         }
 
         [error] = await to(this.userRepository.remove(user));
@@ -127,9 +129,9 @@ export default class UserResolver {
             throw new Error('Error in deleting user');
         }
 
-        logger.info(`User of id ${userId} removed`);
+        logger.info(`User of id ${id} removed`);
 
-        return userId;
+        return id;
     }
 
     private buildPipeline = (query: UserQuery): Array<Pipeline> => {
@@ -149,7 +151,7 @@ export default class UserResolver {
         );
 
         const projection = {
-            _id: 0,
+            // _id: 0,
             __v: 0
         };
 

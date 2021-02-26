@@ -1,33 +1,34 @@
-import { Entity, ObjectIdColumn, ObjectID, Column, CreateDateColumn, UpdateDateColumn, Generated } from 'typeorm';
+import { Entity, ObjectIdColumn, ObjectID, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, RelationId, PrimaryColumn } from 'typeorm';
 import { ObjectType, Field, ID } from 'type-graphql';
+import { User } from '.';
 
 @ObjectType()
 @Entity()
-export default class User {
+export default class Book {
 
     @Field(type => ID)
     @ObjectIdColumn({ generated: true })
     id: ObjectID;
 
     @Field()
-    @Column({ unique: true })
+    @Column()
     uuid: string;
 
     @Field()
     @Column()
-    firstName: string;
+    title: string;
 
     @Field()
     @Column()
-    lastName: string;
+    price: number;
+
+    @Field(type => User)
+    @ManyToOne(type => User)
+    author: User;
 
     @Field()
     @Column()
-    age: number;
-
-    @Field()
-    @Column({ unique: true })
-    email: string;
+    authorId: string;
 
     @Field()
     @CreateDateColumn({

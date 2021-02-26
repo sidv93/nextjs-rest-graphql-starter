@@ -5,6 +5,10 @@ services:
     restart: on-failure
     build:
       context: ./db
+      args:
+        - MONGO_USER_NAME=${MONGO_USER_NAME}
+        - MONGO_USER_PASSWORD=${MONGO_USER_PASSWORD}
+        - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
     env_file: .env
     ports:
       - "27017:27017"
@@ -14,8 +18,8 @@ services:
       - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
       - MONGO_USER_NAME=${MONGO_USER_NAME}
       - MONGO_USER_PASSWORD=${MONGO_USER_PASSWORD}
-    volumes:
-      - starter-data:/data/db
+    # volumes:
+    #   - starter-data:/data/db
     networks:
       - traefik_global
 

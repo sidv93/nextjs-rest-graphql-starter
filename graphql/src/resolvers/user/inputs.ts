@@ -12,12 +12,12 @@ export interface UserQuery {
     orderBy?: 1 | -1;
 }
 
-type UserEditable = Omit<User, 'id' | 'createdAt' | 'updatedAt'>;
+type UserEditable = Omit<User, 'id' | 'uuid' | 'createdAt' | 'updatedAt'>;
 
 @InputType()
 export class UserInput implements UserEditable {
+    
     @Field()
-
     firstName: string;
 
     @Field()
