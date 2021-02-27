@@ -47,13 +47,13 @@ const Code = styled.code`
 `;
 
 export default function Home() {
-    const [result, reexecuteQuery] = useGetUsersQuery();
+    const [result, reexecuteQuery] = useGetUsersQuery({ variables: { userQuery: { firstName: 'sid' } } });
     const { data, fetching, error } = result;
     if (fetching) return <p>Loading...</p>
     if (error) return <p>{error.message}</p>
     return (
         <Container>
-            <p>{data.users[0].email}</p>
+            <p>{data.users[0].firstName}</p>
             <Head>
                 <title>Next Sample App</title>
                 <link rel='icon' href='/favicon.ico' />
