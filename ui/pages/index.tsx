@@ -47,13 +47,8 @@ const Code = styled.code`
 `;
 
 export default function Home() {
-    const [result, reexecuteQuery] = useGetUsersQuery({ variables: { userQuery: { firstName: 'sid' } } });
-    const { data, fetching, error } = result;
-    if (fetching) return <p>Loading...</p>
-    if (error) return <p>{error.message}</p>
     return (
         <Container>
-            <p>{data.users[0].firstName}</p>
             <Head>
                 <title>Next Sample App</title>
                 <link rel='icon' href='/favicon.ico' />
@@ -63,6 +58,10 @@ export default function Home() {
                 <Description>
                     Get started by editing{' '}
                     <Code>pages/index.tsx</Code>
+                </Description>
+                <Description>
+                    Types and hooks are generated before every build and start. Every query and mutation on the server
+                    has corresponding hooks which can be used to execute them.
                 </Description>
             </Main>
         </Container>
